@@ -1,92 +1,110 @@
-// On importe les hooks React nécessaires
 import { useEffect, useState } from "react";
-// On importe axios pour faire des requêtes HTTP
 import axios from "axios";
 
-// On définit une interface TypeScript pour décrire la structure d'une tâche
 interface Task {
-  id: number; // L'identifiant unique de la tâche (nombre)
-  title: string; // Le titre de la tâche (texte)
-  done: boolean; // Le statut de la tâche : terminée (true) ou non (false)
+  id: number;
+  title: string;
+  done: boolean;
 }
 
-// Déclaration du composant React TaskList
 function TaskList() {
-  // Déclaration d'un état React pour stocker la liste des tâches (tableau vide au départ)
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [error, setError] = useState<string>("");
 
-  // Fonction pour récupérer les tâches depuis l'API (GET)
-  const fetchTasks = () => {
-    axios
-      .get("http://localhost:3001/api/tasks") // On envoie une requête GET vers l'API
-      .then((response) => {
-        setTasks(response.data); // Si tout va bien, on stocke les données dans le state
-      })
-      .catch((error) => {
-        console.error("Erreur lors du chargement des tâches :", error); // En cas d'erreur, on l'affiche
+  // 🔄 Récupérer les tâches depuis l'API (GET)
+  const fetchTasks = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Aucun token trouvé. Veuillez vous connecter.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://localhost:3001/api/tasks", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      setTasks(response.data);
+      setError("");
+    } catch (err: any) {
+      console.error("Erreur lors du chargement des tâches :", err);
+      setError("Erreur lors du chargement des tâches.");
+    }
   };
 
-  // Hook useEffect qui s'exécute au montage du composant (une seule fois)
   useEffect(() => {
-    fetchTasks(); // On appelle la fonction pour charger les données au démarrage
-  }, []); // Le tableau vide [] signifie qu'on l'exécute une seule fois
+    fetchTasks();
+  }, []);
 
-  // Fonction pour supprimer une tâche via l'API (DELETE)
-  const handleDelete = (id: number) => {
-    axios
-      .delete(`http://localhost:3001/api/tasks/${id}`) // On envoie une requête DELETE avec l'id de la tâche
-      .then(() => {
-        fetchTasks(); // Après suppression, on recharge la liste pour refléter le changement
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la suppression :", error); // Gestion des erreurs
+  // ✅ Supprimer une tâche (DELETE)
+  const handleDelete = async (id: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await axios.delete(`http://localhost:3001/api/tasks/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      fetchTasks(); // Recharge la liste après suppression
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+    }
   };
 
-  // Fonction pour modifier le statut "done" d'une tâche (PUT)
-  const handleToggleDone = (task: Task) => {
-    const updatedTask = { ...task, done: !task.done }; // On crée une copie de la tâche avec "done" inversé
+  // ✅ Modifier le statut "done" (PUT)
+  const handleToggleDone = async (task: Task) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-    axios
-      .put(`http://localhost:3001/api/tasks/${task.id}`, updatedTask) // On envoie une requête PUT avec la tâche modifiée
-      .then(() => {
-        fetchTasks(); // Après la mise à jour → on recharge la liste
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la mise à jour :", error); // Affichage de l'erreur
-      });
+    const updatedTask = { ...task, done: !task.done };
+
+    try {
+      await axios.put(
+        `http://localhost:3001/api/tasks/${task.id}`,
+        updatedTask,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchTasks(); // Recharge la liste après modification
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+    }
   };
 
-  // Ce que le composant renvoie (le JSX affiché dans le navigateur)
   return (
     <div>
-      {/* Titre de la section */}
-      <h2>Liste des Tâches</h2>
+      {/* Affiche une erreur si besoin */}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      {/* On crée une liste non ordonnée */}
-      <ul className="space-y-3">
-        {/* On parcourt le tableau de tâches avec .map() */}
+      <ul className="space-y-3 mt-4">
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="flex items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm"
+            className="flex items-center justify-between border p-2 rounded shadow"
           >
-            {/* Titre de la tâche + état : clicable pour cocher/décocher */}
+            {/* Clic pour changer le statut "done" */}
             <span
               onClick={() => handleToggleDone(task)}
               className={`cursor-pointer ${
-                task.done ? "line-through text-gray-400" : "text-gray-800"
-              } text-lg`} // Au clic → on inverse le statut "done"
+                task.done ? "line-through text-gray-500" : ""
+              }`}
             >
-              {task.title} - {task.done ? "✔️" : "❌"}{" "}
-              {/* On affiche le titre + une icône */}
+              {task.title}
             </span>
 
-            {/* Bouton pour supprimer la tâche */}
+            {/* Bouton de suppression */}
             <button
               onClick={() => handleDelete(task.id)}
-              className="text-sm text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700"
             >
               Supprimer
             </button>
@@ -97,5 +115,4 @@ function TaskList() {
   );
 }
 
-// On exporte le composant pour pouvoir l'utiliser dans App.tsx
 export default TaskList;

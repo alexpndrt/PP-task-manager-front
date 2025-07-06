@@ -25,14 +25,19 @@ function AddTask({ onTaskAdded }: AddTaskProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="flex gap-3">
       <input
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Titre de la tâche"
       />
-      <button type="submit">Ajouter</button>
+      <button
+        type="submit"
+        className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+      >
+        Ajouter
+      </button>
     </form>
   );
 }

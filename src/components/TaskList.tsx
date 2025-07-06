@@ -1,13 +1,13 @@
 // On importe les hooks React nécessaires
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 // On importe axios pour faire des requêtes HTTP
-import axios from 'axios';
+import axios from "axios";
 
 // On définit une interface TypeScript pour décrire la structure d'une tâche
 interface Task {
-  id: number;      // L'identifiant unique de la tâche (nombre)
-  title: string;   // Le titre de la tâche (texte)
-  done: boolean;   // Le statut de la tâche : terminée (true) ou non (false)
+  id: number; // L'identifiant unique de la tâche (nombre)
+  title: string; // Le titre de la tâche (texte)
+  done: boolean; // Le statut de la tâche : terminée (true) ou non (false)
 }
 
 // Déclaration du composant React TaskList
@@ -17,12 +17,13 @@ function TaskList() {
 
   // Fonction pour récupérer les tâches depuis l'API (GET)
   const fetchTasks = () => {
-    axios.get('http://localhost:3001/api/tasks') // On envoie une requête GET vers l'API
-      .then(response => {
+    axios
+      .get("http://localhost:3001/api/tasks") // On envoie une requête GET vers l'API
+      .then((response) => {
         setTasks(response.data); // Si tout va bien, on stocke les données dans le state
       })
-      .catch(error => {
-        console.error('Erreur lors du chargement des tâches :', error); // En cas d'erreur, on l'affiche
+      .catch((error) => {
+        console.error("Erreur lors du chargement des tâches :", error); // En cas d'erreur, on l'affiche
       });
   };
 
@@ -33,12 +34,13 @@ function TaskList() {
 
   // Fonction pour supprimer une tâche via l'API (DELETE)
   const handleDelete = (id: number) => {
-    axios.delete(`http://localhost:3001/api/tasks/${id}`) // On envoie une requête DELETE avec l'id de la tâche
+    axios
+      .delete(`http://localhost:3001/api/tasks/${id}`) // On envoie une requête DELETE avec l'id de la tâche
       .then(() => {
         fetchTasks(); // Après suppression, on recharge la liste pour refléter le changement
       })
-      .catch(error => {
-        console.error('Erreur lors de la suppression :', error); // Gestion des erreurs
+      .catch((error) => {
+        console.error("Erreur lors de la suppression :", error); // Gestion des erreurs
       });
   };
 
@@ -46,12 +48,13 @@ function TaskList() {
   const handleToggleDone = (task: Task) => {
     const updatedTask = { ...task, done: !task.done }; // On crée une copie de la tâche avec "done" inversé
 
-    axios.put(`http://localhost:3001/api/tasks/${task.id}`, updatedTask) // On envoie une requête PUT avec la tâche modifiée
+    axios
+      .put(`http://localhost:3001/api/tasks/${task.id}`, updatedTask) // On envoie une requête PUT avec la tâche modifiée
       .then(() => {
         fetchTasks(); // Après la mise à jour → on recharge la liste
       })
-      .catch(error => {
-        console.error('Erreur lors de la mise à jour :', error); // Affichage de l'erreur
+      .catch((error) => {
+        console.error("Erreur lors de la mise à jour :", error); // Affichage de l'erreur
       });
   };
 
@@ -62,23 +65,31 @@ function TaskList() {
       <h2>Liste des Tâches</h2>
 
       {/* On crée une liste non ordonnée */}
-      <ul>
+      <ul className="space-y-3">
         {/* On parcourt le tableau de tâches avec .map() */}
-        {tasks.map(task => (
-          <li key={task.id}>
+        {tasks.map((task) => (
+          <li
+            key={task.id}
+            className="flex items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm"
+          >
             {/* Titre de la tâche + état : clicable pour cocher/décocher */}
             <span
-              style={{
-                cursor: 'pointer',                      // Le curseur devient une main au survol
-                textDecoration: task.done ? 'line-through' : 'none' // Si la tâche est terminée → texte barré
-              }}
-              onClick={() => handleToggleDone(task)} // Au clic → on inverse le statut "done"
+              onClick={() => handleToggleDone(task)}
+              className={`cursor-pointer ${
+                task.done ? "line-through text-gray-400" : "text-gray-800"
+              } text-lg`} // Au clic → on inverse le statut "done"
             >
-              {task.title} - {task.done ? '✔️' : '❌'}  {/* On affiche le titre + une icône */}
+              {task.title} - {task.done ? "✔️" : "❌"}{" "}
+              {/* On affiche le titre + une icône */}
             </span>
 
             {/* Bouton pour supprimer la tâche */}
-            <button onClick={() => handleDelete(task.id)}>Supprimer</button>
+            <button
+              onClick={() => handleDelete(task.id)}
+              className="text-sm text-red-500 hover:text-red-700"
+            >
+              Supprimer
+            </button>
           </li>
         ))}
       </ul>
